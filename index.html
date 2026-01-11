@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trash Kart Racer</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Главное меню -->
+        <div id="main-menu" class="screen active">
+            <div class="menu-header">
+                <h1 class="pixel-title">TRASH KART RACER</h1>
+                <div class="character-preview">
+                    <!-- Preview будет добавлено через JS -->
+                </div>
+            </div>
+            
+            <div class="menu-options">
+                <button id="btn-play" class="menu-btn pixel-btn">
+                    <span class="btn-icon">▶️</span>
+                    <span class="btn-text">ИГРАТЬ</span>
+                </button>
+                
+                <div class="score-display">
+                    <div class="score-label">РЕКОРД:</div>
+                    <div id="best-score" class="score-value">0</div>
+                </div>
+                
+                <button id="btn-controls" class="menu-btn pixel-btn">
+                    <span class="btn-icon">🎮</span>
+                    <span class="btn-text">УПРАВЛЕНИЕ</span>
+                </button>
+                
+                <button id="btn-about" class="menu-btn pixel-btn">
+                    <span class="btn-icon">❓</span>
+                    <span class="btn-text">ОБ ИГРЕ</span>
+                </button>
+            </div>
+            
+            <div class="menu-footer">
+                <div class="controls-hint">
+                    На ПК: A - тормоз, S - газ, SPACE - рывок
+                </div>
+            </div>
+        </div>
+        
+        <!-- Экран управления -->
+        <div id="controls-screen" class="screen">
+            <div class="screen-header">
+                <button id="btn-back-from-controls" class="back-btn">← Назад</button>
+                <h2>УПРАВЛЕНИЕ</h2>
+            </div>
+            
+            <div class="controls-content">
+                <div class="control-item">
+                    <div class="control-icon">🛑</div>
+                    <div class="control-desc">
+                        <h3>ТОРМОЗ</h3>
+                        <p>Останавливает карт. Нажмите A на клавиатуре или коснитесь левой педали на телефоне.</p>
+                    </div>
+                </div>
+                
+                <div class="control-item">
+                    <div class="control-icon">⚡</div>
+                    <div class="control-desc">
+                        <h3>ГАЗ</h3>
+                        <p>Ускоряет карт вперед. Нажмите S на клавиатуре или коснитесь правой педали.</p>
+                    </div>
+                </div>
+                
+                <div class="control-item">
+                    <div class="control-icon">💥</div>
+                    <div class="control-desc">
+                        <h3>РЫВОК</h3>
+                        <p>Мощный толчок, разрушающий головы. Нажмите SPACE или коснитесь кнопки сбоку.</p>
+                        <p class="hint">Доступно: <span id="boost-count">3</span> заряда</p>
+                    </div>
+                </div>
+                
+                <div class="control-item">
+                    <div class="control-icon">⚠️</div>
+                    <div class="control-desc">
+                        <h3>ОПАСНОСТИ</h3>
+                        <p>• Красные/синие головы - уничтожайте рывком</p>
+                        <p>• Падение с высоты - смертельно</p>
+                        <p>• Переворот карта - игра окончена</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Игровой экран -->
+        <div id="game-screen" class="screen">
+            <div class="game-header">
+                <div class="game-stats">
+                    <div class="stat">
+                        <span class="stat-label">Дистанция:</span>
+                        <span id="distance-counter" class="stat-value">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Рывки:</span>
+                        <span id="boost-counter" class="stat-value">3</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Рекорд:</span>
+                        <span id="current-best" class="stat-value">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="game-container">
+                <canvas id="game-canvas" width="800" height="300"></canvas>
+                <div class="game-overlay" id="game-overlay">
+                    <div class="message" id="game-message">ГОТОВ?</div>
+                </div>
+            </div>
+            
+            <div class="game-controls">
+                <!-- Педали для мобильных устройств -->
+                <div class="mobile-controls">
+                    <button id="btn-brake" class="control-btn brake-btn" ontouchstart="onTouchStart(event)" ontouchend="onTouchEnd(event)">
+                        <div class="pedal-icon">🛑</div>
+                        <div class="pedal-label">ТОРМОЗ</div>
+                    </button>
+                    
+                    <button id="btn-gas" class="control-btn gas-btn" ontouchstart="onTouchStart(event)" ontouchend="onTouchEnd(event)">
+                        <div class="pedal-icon">⚡</div>
+                        <div class="pedal-label">ГАЗ</div>
+                    </button>
+                    
+                    <button id="btn-boost" class="control-btn boost-btn" ontouchstart="onTouchStart(event)">
+                        <div class="boost-icon">💥</div>
+                        <div class="boost-label">РЫВОК</div>
+                    </button>
+                </div>
+                
+                <!-- Клавиатурные подсказки для ПК -->
+                <div class="keyboard-hints">
+                    <div class="key-hint">A - Тормоз</div>
+                    <div class="key-hint">S - Газ</div>
+                    <div class="key-hint">SPACE - Рывок</div>
+                </div>
+            </div>
+            
+            <div class="game-menu">
+                <button id="btn-pause" class="game-menu-btn">⏸️</button>
+                <button id="btn-restart" class="game-menu-btn">🔄</button>
+                <button id="btn-menu" class="game-menu-btn">🏠</button>
+            </div>
+        </div>
+        
+        <!-- Экран паузы -->
+        <div id="pause-screen" class="screen overlay">
+            <div class="pause-content">
+                <h2>ПАУЗА</h2>
+                <div class="pause-stats">
+                    <div>Дистанция: <span id="pause-distance">0</span></div>
+                    <div>Рекорд: <span id="pause-best">0</span></div>
+                </div>
+                <button id="btn-resume" class="pixel-btn">ПРОДОЛЖИТЬ</button>
+                <button id="btn-restart-from-pause" class="pixel-btn">ЗАНОВО</button>
+                <button id="btn-menu-from-pause" class="pixel-btn">В МЕНЮ</button>
+            </div>
+        </div>
+        
+        <!-- Экран смерти -->
+        <div id="death-screen" class="screen overlay">
+            <div class="death-content">
+                <h2 class="death-title">КАТАСТРОФА!</h2>
+                <div class="death-animation">
+                    <!-- Анимация взрыва будет здесь -->
+                </div>
+                <div class="death-stats">
+                    <div class="stat-result">
+                        <span class="stat-label">Пройдено:</span>
+                        <span id="death-distance" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-result">
+                        <span class="stat-label">Новый рекорд:</span>
+                        <span id="death-new-record" class="stat-value">НЕТ</span>
+                    </div>
+                </div>
+                <div class="death-buttons">
+                    <button id="btn-restart-after-death" class="death-btn">
+                        <span class="btn-icon">🔄</span>
+                        <span class="btn-text">ЗАНОВО</span>
+                    </button>
+                    <button id="btn-menu-after-death" class="death-btn">
+                        <span class="btn-icon">🏠</span>
+                        <span class="btn-text">В МЕНЮ</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/script.js"></script>
+</body>
+</html>
