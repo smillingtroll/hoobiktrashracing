@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trash Kart Racer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a2e;
+            color: #fff;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        #app {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .overlay {
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+        }
+
+        /* Главное меню */
+        .menu-header {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 3px solid #ff4757;
+            margin-bottom: 30px;
+        }
+
+        .pixel-title {
+            font-size: 2.5em;
+            color: #ff4757;
+            text-shadow: 3px 3px 0 #000;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        .character-preview {
+            width: 200px;
+            height: 150px;
+            margin: 0 auto;
+            background: #2d3436;
+            border: 3px solid #636e72;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-options {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 0 20px;
+        }
+
+        .pixel-btn {
+            background: #3742fa;
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            position: relative;
+            width: 80%;
+            max-width: 300px;
+            border: 3px solid #000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.1s;
+        }
+
+        .pixel-btn:hover, .pixel-btn:active {
+            background: #5352ed;
+            transform: translateY(-2px);
+        }
+
+        .pixel-btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-icon {
+            margin-right: 10px;
+        }
+
+        .score-display {
+            background: #2d3436;
+            padding: 15px 30px;
+            border: 3px solid #00b894;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .score-label {
+            color: #00b894;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .score-value {
+            font-size: 2em;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .menu-footer {
+            padding: 20px;
+            text-align: center;
+            color: #636e72;
+            font-size: 0.9em;
+            border-top: 2px solid #2d3436;
+        }
+
+        /* Игровой экран */
+        .game-header {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-bottom: 2px solid #ff4757;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            display: block;
+            color: #74b9ff;
+            font-size: 0.8em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .game-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #game-canvas {
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+        }
+
+        .game-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .message {
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 20px 40px;
+            border: 3px solid #ff4757;
+            font-size: 2em;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .game-controls {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-top: 3px solid #3742fa;
+        }
+
+        .mobile-controls {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .control-btn {
+            background: #2d3436;
+            border: 3px solid #000;
+            border-radius: 10px;
+            padding: 15px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            min-width: 100px;
+            text-align: center;
+            transition: all 0.1s;
+        }
+
+        .control-btn:active {
+            transform: translateY(3px);
+            background: #636e72;
+        }
+
+        .brake-btn {
+            background: #ff4757;
+        }
+
+        .brake-btn:active {
+            background: #ff6b81;
+        }
+
+        .gas-btn {
+            background: #00b894;
+        }
+
+        .gas-btn:active {
+            background: #00d2b8;
+        }
+
+        .boost-btn {
+            background: #3742fa;
+        }
+
+        .boost-btn:active {
+            background: #5352ed;
+        }
+
+        .pedal-icon, .boost-icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .pedal-label, .boost-label {
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .keyboard-hints {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            color: #636e72;
+            font-size: 0.8em;
+            margin-top: 10px;
+        }
+
+        .game-menu {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .game-menu-btn {
+            background: #2d3436;
+            border: 2px solid #636e72;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .game-menu-btn:hover, .game-menu-btn:active {
+            background: #636e72;
+            transform: scale(1.1);
+        }
+
+        /* Экран управления */
+        .screen-header {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            border-bottom: 3px solid #3742fa;
+        }
+
+        .screen-header h2 {
+            flex: 1;
+            text-align: center;
+            color: #74b9ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #ff4757;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 5px 15px;
+        }
+
+        .controls-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .control-item {
+            background: rgba(45, 52, 54, 0.7);
+            border: 2px solid #636e72;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .control-icon {
+            font-size: 2.5em;
+            margin-right: 20px;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .control-desc h3 {
+            color: #00b894;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .control-desc p {
+            color: #dfe6e9;
+            line-height: 1.5;
+            margin-bottom: 5px;
+        }
+
+        .hint {
+            color: #ffeaa7 !important;
+            font-style: italic;
+        }
+
+        /* Экран паузы */
+        .pause-content, .death-content {
+            background: rgba(45, 52, 54, 0.95);
+            border: 5px solid #3742fa;
+            padding: 30px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            margin: auto;
+            border-radius: 15px;
+        }
+
+        .pause-content h2, .death-title {
+            color: #ff4757;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 3px 3px 0 #000;
+        }
+
+        .pause-stats, .death-stats {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .stat-result {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px 0;
+            border-bottom: 1px solid #636e72;
+        }
+
+        .stat-result:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        /* Экран смерти */
+        .death-animation {
+            width: 150px;
+            height: 150px;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .death-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .death-btn {
+            background: #2d3436;
+            border: 3px solid #000;
+            color: white;
+            padding: 15px 25px;
+            font-size: 1.2em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            min-width: 150px;
+        }
+
+        .death-btn:hover, .death-btn:active {
+            background: #636e72;
+            transform: translateY(-3px);
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .pixel-title {
+                font-size: 1.8em;
+            }
+            
+            .pixel-btn {
+                padding: 12px 20px;
+                font-size: 1em;
+            }
+            
+            .game-stats {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .stat {
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
+            }
+            
+            .control-btn {
+                min-width: 80px;
+                padding: 10px;
+            }
+            
+            .pedal-icon, .boost-icon {
+                font-size: 1.5em;
+            }
+            
+            .keyboard-hints {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .mobile-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .control-btn {
+                width: 90%;
+            }
+            
+            .death-buttons {
+                flex-direction: column;
+            }
+        }
+
+        /* Предзагрузка текстур */
+        .texture-preloader {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Главное меню -->
+        <div id="main-menu" class="screen active">
+            <div class="menu-header">
+                <h1 class="pixel-title">TRASH KART RACER</h1>
+                <div class="character-preview">
+                    <canvas id="preview-canvas" width="200" height="150"></canvas>
+                </div>
+            </div>
+            
+            <div class="menu-options">
+                <button id="btn-play" class="menu-btn pixel-btn">
+                    <span class="btn-icon">▶️</span>
+                    <span class="btn-text">ИГРАТЬ</span>
+                </button>
+                
+                <div class="score-display">
+                    <div class="score-label">РЕКОРД:</div>
+                    <div id="best-score" class="score-value">0</div>
+                </div>
+                
+                <button id="btn-controls" class="menu-btn pixel-btn">
+                    <span class="btn-icon">🎮</span>
+                    <span class="btn-text">УПРАВЛЕНИЕ</span>
+                </button>
+                
+                <button id="btn-about" class="menu-btn pixel-btn">
+                    <span class="btn-icon">❓</span>
+                    <span class="btn-text">ОБ ИГРЕ</span>
+                </button>
+            </div>
+            
+            <div class="menu-footer">
+                <div class="controls-hint">
+                    На ПК: A - тормоз, S - газ, SPACE - рывок
+                </div>
+            </div>
+        </div>
+        
+        <!-- Экран управления -->
+        <div id="controls-screen" class="screen">
+            <div class="screen-header">
+                <button id="btn-back-from-controls" class="back-btn">← Назад</button>
+                <h2>УПРАВЛЕНИЕ</h2>
+            </div>
+            
+            <div class="controls-content">
+                <div class="control-item">
+                    <div class="control-icon">🛑</div>
+                    <div class="control-desc">
+                        <h3>ТОРМОЗ</h3>
+                        <p>Останавливает карт. Нажмите A на клавиатуре или коснитесь левой педали на телефоне.</p>
+                    </div>
+                </div>
+                
+                <div class="control-item">
+                    <div class="control-icon">⚡</div>
+                    <div class="control-desc">
+                        <h3>ГАЗ</h3>
+                        <p>Ускоряет карт вперед. Нажмите S на клавиатуре или коснитесь правой педали.</p>
+                    </div>
+                </div>
+                
+                <div class="control-item">
+                    <div class="control-icon">💥</div>
+                    <div class="control-desc">
+                        <h3>РЫВОК</h3>
+                        <p>Мощный толчок, разрушающий головы. Нажмите SPACE или коснитесь кнопки сбоку.</p>
+                        <p class="hint">Доступно: <span id="boost-count">3</span> заряда</p>
+                    </div>
+                </div>
+                
+                <div class="control-item">
+                    <div class="control-icon">⚠️</div>
+                    <div class="control-desc">
+                        <h3>ОПАСНОСТИ</h3>
+                        <p>• Красные/синие головы - уничтожайте рывком</p>
+                        <p>• Падение с высоты - смертельно</p>
+                        <p>• Переворот карта - игра окончена</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Игровой экран -->
+        <div id="game-screen" class="screen">
+            <div class="game-header">
+                <div class="game-stats">
+                    <div class="stat">
+                        <span class="stat-label">Дистанция:</span>
+                        <span id="distance-counter" class="stat-value">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Рывки:</span>
+                        <span id="boost-counter" class="stat-value">3</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Рекорд:</span>
+                        <span id="current-best" class="stat-value">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="game-container">
+                <canvas id="game-canvas" width="800" height="300"></canvas>
+                <div class="game-overlay" id="game-overlay">
+                    <div class="message" id="game-message">ГОТОВ?</div>
+                </div>
+            </div>
+            
+            <div class="game-controls">
+                <!-- Педали для мобильных устройств -->
+                <div class="mobile-controls">
+                    <button id="btn-brake" class="control-btn brake-btn">
+                        <div class="pedal-icon">🛑</div>
+                        <div class="pedal-label">ТОРМОЗ</div>
+                    </button>
+                    
+                    <button id="btn-gas" class="control-btn gas-btn">
+                        <div class="pedal-icon">⚡</div>
+                        <div class="pedal-label">ГАЗ</div>
+                    </button>
+                    
+                    <button id="btn-boost" class="control-btn boost-btn">
+                        <div class="boost-icon">💥</div>
+                        <div class="boost-label">РЫВОК</div>
+                    </button>
+                </div>
+                
+                <!-- Клавиатурные подсказки для ПК -->
+                <div class="keyboard-hints">
+                    <div class="key-hint">A - Тормоз</div>
+                    <div class="key-hint">S - Газ</div>
+                    <div class="key-hint">SPACE - Рывок</div>
+                </div>
+            </div>
+            
+            <div class="game-menu">
+                <button id="btn-pause" class="game-menu-btn">⏸️</button>
+                <button id="btn-restart" class="game-menu-btn">🔄</button>
+                <button id="btn-menu" class="game-menu-btn">🏠</button>
+            </div>
+        </div>
+        
+        <!-- Экран паузы -->
+        <div id="pause-screen" class="screen overlay">
+            <div class="pause-content">
+                <h2>ПАУЗА</h2>
+                <div class="pause-stats">
+                    <div>Дистанция: <span id="pause-distance">0</span></div>
+                    <div>Рекорд: <span id="pause-best">0</span></div>
+                </div>
+                <button id="btn-resume" class="pixel-btn">ПРОДОЛЖИТЬ</button>
+                <button id="btn-restart-from-pause" class="pixel-btn">ЗАНОВО</button>
+                <button id="btn-menu-from-pause" class="pixel-btn">В МЕНЮ</button>
+            </div>
+        </div>
+        
+        <!-- Экран смерти -->
+        <div id="death-screen" class="screen overlay">
+            <div class="death-content">
+                <h2 class="death-title">КАТАСТРОФА!</h2>
+                <div class="death-animation">
+                    <canvas id="death-canvas" width="150" height="150"></canvas>
+                </div>
+                <div class="death-stats">
+                    <div class="stat-result">
+                        <span class="stat-label">Пройдено:</span>
+                        <span id="death-distance" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-result">
+                        <span class="stat-label">Новый рекорд:</span>
+                        <span id="death-new-record" class="stat-value">НЕТ</span>
+                    </div>
+                </div>
+                <div class="death-buttons">
+                    <button id="btn-restart-after-death" class="death-btn">
+                        <span class="btn-icon">🔄</span>
+                        <span class="btn-text">ЗАНОВО</span>
+                    </button>
+                    <button id="btn-menu-after-death" class="death-btn">
+                        <span class="btn-icon">🏠</span>
+                        <span class="btn-text">В МЕНЮ</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Скрытые прелоадеры текстур -->
+        <div class="texture-preloader">
+            <img id="tex-background" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==">
+            <img id="tex-character" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACgSURBVEhLY2AYBaOABgALTIyPj2cAEf/+/WMA0v8hNJA9CiAMFAMmIMDAgK0QRgEWMBqJQAZDJAISiYwMSHpGAR0BE5AYBTSOTMYBBgYGJK9BWRgF4AwoE8NAWQzDKIBFIrYYZgLSQD5IDgQYgfxRAI5EMAMrC8QYBbQBmJgYGKbOnArOjEANUDaUMQpGAe0BJiABBKMAFwAALf0U9C8QaFUAAAAASUVORK5CYII=">
+            <img id="tex-head-red" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFZSURBVFhH7Zc9SgNBFIVnks0a3YClhZ3+g72VrZVgayWInY1gYSXYWgi2FoKthWBrIdhaCLYWgq2FYCt2woV3wxB/NrMZsPDBJWQz832Tl2ySJEmSJP8NN93VKq9VvVgAAAAASUVORK5CYII=">
+            <img id="tex-head-blue" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFkSURBVFhH7Zc9SgNBFIVnks0a3YClhZ3+g72VrZVgayWInY1gYSXYWgi2FoKthWBrIdhaCLYWgq2FYCt2woV3wxB/NrMZsPDBJWQz832Tl2ySJEmSJElGrLgdS8uq7suV8lJ5ojxUHij3lLvKHeW2cku5qdxQrivXlKvKFeWycgmQrgAAAABJRU5ErkJggg==">
+            <img id="tex-wheel" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAC7SURBVDhPxZRBCsJAFET7H3ITD+AJvIEX8QbewAt4Ay/gCbyBF/ACXsATeAEP4J6ZwkAw0KQzs4UHD0JI8vKSziZJkiT/k+24LrDf79sK8ziOHx9tGuuqruvUdd17aZqmQ9d1h77vD0VRvCqHZVkeD8PwWpZlOo7jqeu6Q9u2B5hN07SgFVZQwTiQYRgWZVm+xnFcwKZt2wMMYQhL2M7z/N4ZwgoqmAcyDMNiniLshN0+hn8dIax2f8AOgxnCEpYwhOkOQ5huDGG6MYTpwgimO0OYbgxhujGE6cYQphNDmC7wB2uQ7lwZrJzTAAAAAElFTkSuQmCC">
+        </div>
+    </div>
+
+    <script>
+        // ==================== КОНСТАНТЫ И ПЕРЕМЕННЫЕ ====================
+        const GAME_WIDTH = 800;
+        const GAME_HEIGHT = 300;
+        const GROUND_Y = 220;
+        const GRAVITY = 0.5;
+        const FRICTION = 0.95;
+        const BOOST_POWER = 15;
+        const MAX_VELOCITY_X = 25;
+        const MAX_VELOCITY_Y = 30;
+
+        // ==================== КЛАССЫ ИГРЫ ====================
+
+        class Vector2 {
+            constructor(x = 0, y = 0) {
+                this.x = x;
+                this.y = y;
+            }
+            
+            add(other) {
+                return new Vector2(this.x + other.x, this.y + other.y);
+            }
+            
+            subtract(other) {
+                return new Vector2(this.x - other.x, this.y - other.y);
+            }
+            
+            multiply(scalar) {
+                return new Vector2(this.x * scalar, this.y * scalar);
+            }
+            
+            magnitude() {
+                return Math.sqrt(this.x * this.x + this.y * this.y);
+            }
+            
+            normalize() {
+                const mag = this.magnitude();
+                if (mag === 0) return new Vector2(0, 0);
+                return new Vector2(this.x / mag, this.y / mag);
+            }
+        }
+
+        class Player {
+            constructor() {
+                this.position = new Vector2(100, GROUND_Y - 30);
+                this.velocity = new Vector2(5, 0);
+                this.rotation = 0;
+                this.angularVelocity = 0;
+                this.onGround = true;
+                this.alive = true;
+                this.distance = 0;
+                this.boostCharges = 3;
+                this.wheelRotation = 0;
+                this.width = 40;
+                this.height = 25;
+            }
+            
+            update(action) {
+                // Применяем действие
+                if (action === 'gas' && this.onGround) {
+                    this.velocity.x += 0.8;
+                    this.wheelRotation += this.velocity.x * 0.1;
+                } else if (action === 'brake' && this.onGround) {
+                    this.velocity.x *= 0.7;
+                } else if (action === 'boost' && this.boostCharges > 0) {
+                    const boostX = Math.cos(this.rotation) * BOOST_POWER;
+                    const boostY = Math.sin(this.rotation) * BOOST_POWER;
+                    this.velocity.x += boostX;
+                    this.velocity.y += boostY;
+                    this.boostCharges--;
+                }
+                
+                // Физика
+                this.velocity.y += GRAVITY;
+                
+                // Ограничение скорости
+                this.velocity.x = Math.max(-MAX_VELOCITY_X, Math.min(MAX_VELOCITY_X, this.velocity.x));
+                this.velocity.y = Math.max(-MAX_VELOCITY_Y, Math.min(MAX_VELOCITY_Y, this.velocity.y));
+                
+                // Обновление позиции
+                const newPos = this.position.add(this.velocity);
+                
+                // Проверка земли
+                if (newPos.y >= GROUND_Y - this.height / 2) {
+                    newPos.y = GROUND_Y - this.height / 2;
+                    this.velocity.y = 0;
+                    this.onGround = true;
+                    this.velocity.x *= FRICTION;
+                    
+                    // Выравнивание при приземлении
+                    if (Math.abs(this.rotation) > 0.1) {
+                        this.angularVelocity = -this.rotation * 0.1;
+                    }
+                } else {
+                    this.onGround = false;
+                    this.velocity.x *= 0.99; // Сопротивление воздуха
+                }
+                
+                // Вращение в воздухе
+                if (!this.onGround) {
+                    this.rotation += this.angularVelocity;
+                    this.angularVelocity *= 0.98;
+                }
+                
+                this.position = newPos;
+                this.distance = Math.max(this.distance, this.position.x);
+            }
+        }
+
+        class HeadObstacle {
+            constructor(x, y, color = 'red') {
+                this.position = new Vector2(x, y);
+                this.velocity = new Vector2(-3, 0);
+                this.rotation = 0;
+                this.color = color;
+                this.active = true;
+                this.radius = 15;
+            }
+            
+            update() {
+                this.position = this.position.add(this.velocity);
+                this.rotation += 0.1;
+            }
+            
+            checkCollision(playerPos) {
+                const dx = this.position.x - playerPos.x;
+                const dy = this.position.y - playerPos.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < (this.radius + 20);
+            }
+        }
+
+        class GameEngine {
+            constructor() {
+                this.player = new Player();
+                this.obstacles = [];
+                this.gameTime = 0;
+                this.score = 0;
+                this.generateInitialObstacles();
+            }
+            
+            generateInitialObstacles() {
+                // Генерация начальных голов
+                for (let i = 0; i < 5; i++) {
+                    const x = 300 + i * 200;
+                    const y = GROUND_Y - 50 + (Math.random() * 40 - 20);
+                    const color = Math.random() > 0.5 ? 'red' : 'blue';
+                    this.obstacles.push(new HeadObstacle(x, y, color));
+                }
+            }
+            
+            update(action = null) {
+                if (!this.player.alive) return;
+                
+                this.gameTime++;
+                this.player.update(action);
+                
+                // Обновление препятствий
+                for (let i = this.obstacles.length - 1; i >= 0; i--) {
+                    const obstacle = this.obstacles[i];
+                    if (obstacle.active) {
+                        obstacle.update();
+                        
+                        // Проверка столкновения
+                        if (obstacle.checkCollision(this.player.position)) {
+                            if (action === 'boost') {
+                                obstacle.active = false;
+                            } else {
+                                // Смерть от столкновения
+                                this.player.alive = false;
+                            }
+                        }
+                        
+                        // Удаление вышедших за экран
+                        if (obstacle.position.x < -50) {
+                            this.obstacles.splice(i, 1);
+                        }
+                    } else {
+                        this.obstacles.splice(i, 1);
+                    }
+                }
+                
+                // Проверка смерти от переворота
+                if (Math.abs(this.player.rotation) > Math.PI / 2) {
+                    const headX = this.player.position.x + Math.sin(this.player.rotation) * 20;
+                    const headY = this.player.position.y - Math.cos(this.player.rotation) * 20;
+                    if (headY >= GROUND_Y - 5) {
+                        this.player.alive = false;
+                    }
+                }
+                
+                // Генерация новых препятствий
+                if (Math.random() < 0.02) {
+                    const x = this.player.position.x + 800 + Math.random() * 200;
+                    const y = GROUND_Y - 50 + (Math.random() * 40 - 20);
+                    const color = Math.random() > 0.5 ? 'red' : 'blue';
+                    this.obstacles.push(new HeadObstacle(x, y, color));
+                }
+                
+                // Расчет очков (каждые 5 пикселей = 1 очко)
+                this.score = Math.floor(this.player.distance / 5);
+            }
+            
+            getGameState() {
+                return {
+                    player: {
+                        x: this.player.position.x,
+                        y: this.player.position.y,
+                        velocityX: this.player.velocity.x,
+                        rotation: this.player.rotation,
+                        onGround: this.player.onGround,
+                        alive: this.player.alive,
+                        distance: this.player.distance,
+                        boostCharges: this.player.boostCharges,
+                        wheelRotation: this.player.wheelRotation
+                    },
+                    obstacles: this.obstacles,
+                    score: this.score
+                };
+            }
+        }
+
+        // ==================== РЕНДЕРЕР ====================
+
+        class GameRenderer {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.textures = {};
+                this.loadTextures();
+            }
+            
+            loadTextures() {
+                // Создаем текстуры программно
+                this.createBackgroundTexture();
+                this.createCharacterTexture();
+                this.createHeadTexture('red');
+                this.createHeadTexture('blue');
+                this.createWheelTexture();
+            }
+            
+            createBackgroundTexture() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 800;
+                canvas.height = 300;
+                const ctx = canvas.getContext('2d');
+                
+                // Градиентное небо
+                const gradient = ctx.createLinearGradient(0, 0, 0, 150);
+                gradient.addColorStop(0, '#1a1a2e');
+                gradient.addColorStop(1, '#16213e');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 800, 150);
+                
+                // Земля
+                ctx.fillStyle = '#2d3436';
+                ctx.fillRect(0, GROUND_Y, 800, 300 - GROUND_Y);
+                
+                // Текстура земли
+                ctx.fillStyle = '#636e72';
+                for (let i = 0; i < 800; i += 20) {
+                    ctx.fillRect(i, GROUND_Y, 10, 5);
+                }
+                
+                // Трубы и андеграунд детали
+                ctx.fillStyle = '#ff4757';
+                ctx.fillRect(100, 180, 200, 10);
+                ctx.fillRect(500, 190, 150, 8);
+                
+                this.textures.background = canvas;
+            }
+            
+            createCharacterTexture() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 24;
+                canvas.height = 36;
+                const ctx = canvas.getContext('2d');
+                
+                // Ноги (большие кросовки)
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(4, 28, 8, 8); // Левая
+                ctx.fillRect(16, 28, 8, 8); // Правая
+                
+                // Белые полосы на кросовках
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(5, 30, 6, 3);
+                ctx.fillRect(17, 30, 6, 3);
+                
+                // Штаны (серые)
+                ctx.fillStyle = '#808080';
+                ctx.fillRect(6, 18, 12, 10);
+                
+                // Тело (белая майка)
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(8, 10, 8, 8);
+                
+                // Руки
+                ctx.fillStyle = '#f4d4b8';
+                ctx.fillRect(4, 12, 4, 6); // Левая
+                ctx.fillRect(16, 12, 4, 6); // Правая
+                
+                // Голова
+                ctx.fillStyle = '#f4d4b8';
+                ctx.beginPath();
+                ctx.arc(12, 4, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Черная шапка "бини"
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(8, 0, 8, 4);
+                ctx.beginPath();
+                ctx.arc(12, 4, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Лицо
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(10, 3, 1, 1); // Левый глаз
+                ctx.fillRect(14, 3, 1, 1); // Правый глаз
+                ctx.fillRect(11, 5, 2, 1); // Рот
+                
+                this.textures.character = canvas;
+            }
+            
+            createHeadTexture(color) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 32;
+                canvas.height = 32;
+                const ctx = canvas.getContext('2d');
+                
+                const baseColor = color === 'red' ? '#b42828' : '#283cb4';
+                const darkColor = color === 'red' ? '#781c1c' : '#1c2878';
+                const lightColor = color === 'red' ? '#dc5050' : '#5064dc';
+                
+                // Голова (круг)
+                ctx.fillStyle = baseColor;
+                ctx.beginPath();
+                ctx.arc(16, 16, 12, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Детали
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(12, 14, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(20, 14, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(12, 14, 1, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(20, 14, 1, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Рот
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(16, 18, 4, 0, Math.PI);
+                ctx.stroke();
+                
+                // Блики
+                ctx.fillStyle = lightColor;
+                ctx.beginPath();
+                ctx.arc(10, 10, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(22, 22, 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Трещины
+                ctx.strokeStyle = darkColor;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(10, 20);
+                ctx.lineTo(15, 25);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(20, 10);
+                ctx.lineTo(25, 15);
+                ctx.stroke();
+                
+                this.textures[`head_${color}`] = canvas;
+            }
+            
+            createWheelTexture() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 20;
+                canvas.height = 20;
+                const ctx = canvas.getContext('2d');
+                
+                // Шина
+                ctx.fillStyle = '#141414';
+                ctx.beginPath();
+                ctx.arc(10, 10, 9, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Диск
+                ctx.fillStyle = '#3c3c3c';
+                ctx.beginPath();
+                ctx.arc(10, 10, 6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Спицы
+                ctx.strokeStyle = '#646464';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i * Math.PI * 2) / 8;
+                    const x1 = 10 + 7 * Math.cos(angle);
+                    const y1 = 10 + 7 * Math.sin(angle);
+                    const x2 = 10 + 3 * Math.cos(angle);
+                    const y2 = 10 + 3 * Math.sin(angle);
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+                
+                this.textures.wheel = canvas;
+            }
+            
+            render(gameState) {
+                const ctx = this.ctx;
+                const player = gameState.player;
+                
+                // Очистка
+                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Фон
+                ctx.drawImage(this.textures.background, 0, 0);
+                
+                // Земля с кочками
+                ctx.fillStyle = '#404040';
+                ctx.fillRect(0, GROUND_Y, this.canvas.width, this.canvas.height - GROUND_Y);
+                
+                // Кочки на земле
+                ctx.fillStyle = '#505050';
+                for (let i = 0; i < this.canvas.width; i += 50) {
+                    const bumpHeight = 10 + Math.sin(i * 0.1 + gameState.score * 0.01) * 5;
+                    ctx.beginPath();
+                    ctx.arc(i, GROUND_Y - bumpHeight, 15, 0, Math.PI);
+                    ctx.fill();
+                }
+                
+                // Препятствия (головы)
+                gameState.obstacles.forEach(obstacle => {
+                    if (obstacle.active) {
+                        ctx.save();
+                        ctx.translate(obstacle.position.x, obstacle.position.y);
+                        ctx.rotate(obstacle.rotation);
+                        
+                        const texture = this.textures[`head_${obstacle.color}`];
+                        ctx.drawImage(texture, -16, -16);
+                        
+                        ctx.restore();
+                    }
+                });
+                
+                // Карт с персонажем
+                this.renderKart(player);
+                
+                // Пыль из-под колес
+                if (player.onGround && Math.abs(player.velocityX) > 2) {
+                    this.renderDust(player);
+                }
+                
+                // Интерфейс
+                this.renderUI(gameState);
+            }
+            
+            renderKart(player) {
+                const ctx = this.ctx;
+                const kartX = player.x;
+                const kartY = player.y;
+                
+                ctx.save();
+                ctx.translate(kartX, kartY);
+                ctx.rotate(player.rotation);
+                
+                // Корпус карта (серый металл)
+                ctx.fillStyle = '#4a4a4a';
+                ctx.fillRect(-20, -12, 40, 12);
+                
+                // Детали карта
+                ctx.fillStyle = '#3a3a3a';
+                ctx.fillRect(-15, -10, 30, 8);
+                
+                // Колеса
+                ctx.save();
+                ctx.translate(-15, 0);
+                ctx.rotate(player.wheelRotation);
+                ctx.drawImage(this.textures.wheel, -10, -10);
+                ctx.restore();
+                
+                ctx.save();
+                ctx.translate(15, 0);
+                ctx.rotate(player.wheelRotation);
+                ctx.drawImage(this.textures.wheel, -10, -10);
+                ctx.restore();
+                
+                // Персонаж в карте
+                ctx.save();
+                ctx.scale(1.5, 1.5);
+                ctx.drawImage(this.textures.character, -8, -18);
+                ctx.restore();
+                
+                ctx.restore();
+            }
+            
+            renderDust(player) {
+                const ctx = this.ctx;
+                const intensity = Math.min(Math.abs(player.velocityX) / 10, 1);
+                
+                ctx.save();
+                ctx.translate(player.x, player.y + 5);
+                
+                // Пыль под задним колесом
+                ctx.fillStyle = `rgba(150, 120, 80, ${intensity * 0.5})`;
+                for (let i = 0; i < 10; i++) {
+                    const angle = Math.PI + (Math.random() * 0.5 - 0.25);
+                    const distance = 10 + Math.random() * 20;
+                    const size = 2 + Math.random() * 4;
+                    const x = -15 + Math.cos(angle) * distance;
+                    const y = Math.sin(angle) * distance;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Пыль под передним колесом
+                for (let i = 0; i < 10; i++) {
+                    const angle = Math.PI + (Math.random() * 0.5 - 0.25);
+                    const distance = 10 + Math.random() * 20;
+                    const size = 2 + Math.random() * 4;
+                    const x = 15 + Math.cos(angle) * distance;
+                    const y = Math.sin(angle) * distance;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+            }
+            
+            renderUI(gameState) {
+                const ctx = this.ctx;
+                
+                // Фон для UI
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(10, 10, 200, 50);
+                
+                // Дистанция
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 24px Courier New';
+                ctx.fillText(`DISTANCE: ${gameState.score}`, 20, 40);
+                
+                // Рывки
+                ctx.fillStyle = '#74b9ff';
+                ctx.font = 'bold 20px Courier New';
+                ctx.fillText(`BOOST: ${gameState.player.boostCharges}`, 20, 70);
+            }
+            
+            renderDeathAnimation(x, y) {
+                const ctx = this.ctx;
+                
+                for (let r = 30; r > 0; r -= 3) {
+                    const alpha = 200 * (r / 30) / 255;
+                    ctx.fillStyle = `rgba(255, 100, 50, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(x, y, r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Частицы
+                for (let i = 0; i < 20; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 10 + Math.random() * 30;
+                    const particleX = x + distance * Math.cos(angle);
+                    const particleY = y + distance * Math.sin(angle);
+                    const size = 2 + Math.random() * 4;
+                    const colors = ['#ffc864', '#ff7850', '#c83232'];
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(particleX, particleY, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // ==================== УПРАВЛЕНИЕ ИГРОЙ ====================
+
+        class TrashKartGame {
+            constructor() {
+                this.canvas = document.getElementById('game-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.gameEngine = new GameEngine();
+                this.renderer = new GameRenderer(this.canvas);
+                this.isPlaying = false;
+                this.isAlive = true;
+                this.bestScore = parseInt(localStorage.getItem('trash_kart_best_score')) || 0;
+                this.currentScore = 0;
+                this.keysPressed = {};
+                this.gameLoop = null;
+                this.lastTime = 0;
+                
+                this.initTelegramWebApp();
+                this.bindEvents();
+                this.updateBestScoreDisplay();
+            }
+            
+            initTelegramWebApp() {
+                if (window.Telegram && Telegram.WebApp) {
+                    Telegram.WebApp.ready();
+                    Telegram.WebApp.expand();
+                    Telegram.WebApp.enableClosingConfirmation();
+                }
+            }
+            
+            bindEvents() {
+                // Навигация по меню
+                document.getElementById('btn-play').addEventListener('click', () => this.startGame());
+                document.getElementById('btn-controls').addEventListener('click', () => this.showScreen('controls-screen'));
+                document.getElementById('btn-back-from-controls').addEventListener('click', () => this.showScreen('main-menu'));
+                document.getElementById('btn-about').addEventListener('click', () => this.showAbout());
+                
+                // Управление в игре
+                const brakeBtn = document.getElementById('btn-brake');
+                const gasBtn = document.getElementById('btn-gas');
+                const boostBtn = document.getElementById('btn-boost');
+                
+                brakeBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.keysPressed.brake = true;
+                });
+                brakeBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.keysPressed.brake = false;
+                });
+                
+                gasBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.keysPressed.gas = true;
+                });
+                gasBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.keysPressed.gas = false;
+                });
+                
+                boostBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (this.gameEngine.player.boostCharges > 0) {
+                        this.keysPressed.boost = true;
+                        setTimeout(() => { this.keysPressed.boost = false; }, 100);
+                    }
+                });
+                
+                // Клавиатурное управление
+                document.addEventListener('keydown', (e) => {
+                    if (!this.isPlaying) return;
+                    
+                    switch(e.key.toLowerCase()) {
+                        case 'a':
+                            e.preventDefault();
+                            this.keysPressed.brake = true;
+                            break;
+                        case 's':
+                            e.preventDefault();
+                            this.keysPressed.gas = true;
+                            break;
+                        case ' ':
+                            e.preventDefault();
+                            if (this.gameEngine.player.boostCharges > 0) {
+                                this.keysPressed.boost = true;
+                                setTimeout(() => { this.keysPressed.boost = false; }, 100);
+                            }
+                            break;
+                        case 'escape':
+                            e.preventDefault();
+                            this.togglePause();
+                            break;
+                    }
+                });
+                
+                document.addEventListener('keyup', (e) => {
+                    switch(e.key.toLowerCase()) {
+                        case 'a':
+                            this.keysPressed.brake = false;
+                            break;
+                        case 's':
+                            this.keysPressed.gas = false;
+                            break;
+                    }
+                });
+                
+                // Управление игрой
+                document.getElementById('btn-pause').addEventListener('click', () => this.togglePause());
+                document.getElementById('btn-restart').addEventListener('click', () => this.restartGame());
+                document.getElementById('btn-menu').addEventListener('click', () => this.returnToMenu());
+                
+                document.getElementById('btn-resume').addEventListener('click', () => this.togglePause());
+                document.getElementById('btn-restart-from-pause').addEventListener('click', () => this.restartGame());
+                document.getElementById('btn-menu-from-pause').addEventListener('click', () => this.returnToMenu());
+                
+                document.getElementById('btn-restart-after-death').addEventListener('click', () => this.restartGame());
+                document.getElementById('btn-menu-after-death').addEventListener('click', () => this.returnToMenu());
+                
+                // Предпросмотр персонажа
+                this.drawCharacterPreview();
+            }
+            
+            drawCharacterPreview() {
+                const previewCanvas = document.getElementById('preview-canvas');
+                const ctx = previewCanvas.getContext('2d');
+                
+                // Очистка
+                ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+                
+                // Фон
+                ctx.fillStyle = '#2d3436';
+                ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+                
+                // Земля
+                ctx.fillStyle = '#636e72';
+                ctx.fillRect(0, 100, previewCanvas.width, 50);
+                
+                // Карт с персонажем
+                ctx.save();
+                ctx.translate(100, 80);
+                
+                // Корпус карта
+                ctx.fillStyle = '#4a4a4a';
+                ctx.fillRect(-30, -10, 60, 15);
+                
+                // Колеса
+                ctx.fillStyle = '#141414';
+                ctx.beginPath();
+                ctx.arc(-20, 5, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(20, 5, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Персонаж
+                ctx.fillStyle = '#f4d4b8';
+                ctx.beginPath();
+                ctx.arc(0, -15, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Шапка
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(-6, -23, 12, 8);
+                ctx.beginPath();
+                ctx.arc(0, -15, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Майка
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(-8, -8, 16, 10);
+                
+                // Штаны
+                ctx.fillStyle = '#808080';
+                ctx.fillRect(-6, 2, 12, 8);
+                
+                // Кросовки
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(-10, 10, 8, 6);
+                ctx.fillRect(2, 10, 8, 6);
+                
+                ctx.restore();
+                
+                // Текст
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 16px Courier New';
+                ctx.fillText('TRASH KART', 50, 140);
+            }
+            
+            startGame() {
+                this.showScreen('game-screen');
+                this.isPlaying = true;
+                this.isAlive = true;
+                
+                // Сброс игры
+                this.gameEngine = new GameEngine();
+                this.currentScore = 0;
+                
+                // Обновление отображения
+                document.getElementById('current-best').textContent = this.bestScore;
+                document.getElementById('boost-counter').textContent = '3';
+                
+                // Показ сообщения "ГОТОВ?"
+                const messageEl = document.getElementById('game-message');
+                messageEl.textContent = 'ГОТОВ?';
+                messageEl.style.display = 'block';
+                
+                // Запуск игры через 2 секунды
+                setTimeout(() => {
+                    messageEl.style.display = 'none';
+                    this.startGameLoop();
+                }, 2000);
+            }
+            
+            startGameLoop() {
+                if (this.gameLoop) {
+                    cancelAnimationFrame(this.gameLoop);
+                }
+                
+                const gameLoop = (timestamp) => {
+                    if (!this.isPlaying) return;
+                    
+                    // Вычисляем дельту времени
+                    const deltaTime = timestamp - this.lastTime;
+                    this.lastTime = timestamp;
+                    
+                    // Определяем действие
+                    let action = null;
+                    if (this.keysPressed.gas) action = 'gas';
+                    if (this.keysPressed.brake) action = 'brake';
+                    if (this.keysPressed.boost) action = 'boost';
+                    
+                    // Обновляем физику
+                    this.gameEngine.update(action);
+                    
+                    // Получаем состояние
+                    const gameState = this.gameEngine.getGameState();
+                    this.currentScore = gameState.score;
+                    this.isAlive = gameState.player.alive;
+                    
+                    // Рендерим
+                    this.renderer.render(gameState);
+                    
+                    // Обновляем UI
+                    this.updateGameUI(gameState);
+                    
+                    // Проверка смерти
+                    if (!this.isAlive) {
+                        this.gameOver();
+                        return;
+                    }
+                    
+                    // Продолжаем цикл
+                    this.gameLoop = requestAnimationFrame(gameLoop);
+                };
+                
+                this.lastTime = performance.now();
+                this.gameLoop = requestAnimationFrame(gameLoop);
+            }
+            
+            updateGameUI(gameState) {
+                // Дистанция
+                document.getElementById('distance-counter').textContent = gameState.score;
+                
+                // Рывки
+                document.getElementById('boost-counter').textContent = gameState.player.boostCharges;
+                document.getElementById('boost-count').textContent = gameState.player.boostCharges;
+                
+                // Автоматическое движение вперед (газ)
+                if (!this.keysPressed.brake) {
+                    this.keysPressed.gas = true;
+                }
+            }
+            
+            gameOver() {
+                this.isPlaying = false;
+                
+                // Остановка игрового цикла
+                if (this.gameLoop) {
+                    cancelAnimationFrame(this.gameLoop);
+                    this.gameLoop = null;
+                }
+                
+                // Анимация смерти
+                const gameState = this.gameEngine.getGameState();
+                this.renderer.renderDeathAnimation(gameState.player.x, gameState.player.y);
+                
+                // Проверка рекорда
+                const isNewRecord = this.currentScore > this.bestScore;
+                if (isNewRecord) {
+                    this.bestScore = this.currentScore;
+                    localStorage.setItem('trash_kart_best_score', this.bestScore.toString());
+                }
+                
+                // Обновление экрана смерти
+                document.getElementById('death-distance').textContent = this.currentScore;
+                document.getElementById('death-new-record').textContent = isNewRecord ? 'ДА!' : 'НЕТ';
+                document.getElementById('death-new-record').style.color = isNewRecord ? '#00b894' : '#ff4757';
+                
+                // Показ экрана смерти
+                setTimeout(() => {
+                    this.showScreen('death-screen');
+                    this.updateBestScoreDisplay();
+                }, 1500);
+            }
+            
+            togglePause() {
+                if (!this.isPlaying) return;
+                
+                const pauseScreen = document.getElementById('pause-screen');
+                
+                if (pauseScreen.classList.contains('active')) {
+                    // Возобновление
+                    pauseScreen.classList.remove('active');
+                    this.startGameLoop();
+                } else {
+                    // Пауза
+                    pauseScreen.classList.add('active');
+                    
+                    // Обновление статистики
+                    document.getElementById('pause-distance').textContent = this.currentScore;
+                    document.getElementById('pause-best').textContent = this.bestScore;
+                    
+                    // Остановка цикла
+                    if (this.gameLoop) {
+                        cancelAnimationFrame(this.gameLoop);
+                        this.gameLoop = null;
+                    }
+                }
+            }
+            
+            restartGame() {
+                // Остановка всех циклов
+                if (this.gameLoop) {
+                    cancelAnimationFrame(this.gameLoop);
+                    this.gameLoop = null;
+                }
+                
+                // Закрытие всех экранов
+                document.querySelectorAll('.screen').forEach(screen => {
+                    screen.classList.remove('active');
+                });
+                
+                // Перезапуск
+                setTimeout(() => {
+                    this.startGame();
+                }, 500);
+            }
+            
+            returnToMenu() {
+                // Остановка
+                if (this.gameLoop) {
+                    cancelAnimationFrame(this.gameLoop);
+                    this.gameLoop = null;
+                }
+                
+                // Сброс
+                this.isPlaying = false;
+                this.isAlive = true;
+                
+                // Очистка канваса
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Показ меню
+                this.showScreen('main-menu');
+                this.updateBestScoreDisplay();
+            }
+            
+            showScreen(screenId) {
+                // Скрыть все экраны
+                document.querySelectorAll('.screen').forEach(screen => {
+                    screen.classList.remove('active');
+                });
+                
+                // Показать нужный экран
+                document.getElementById(screenId).classList.add('active');
+            }
+            
+            showAbout() {
+                const aboutText = 'Trash Kart Racer\n\n' +
+                                'Андеграундные гонки на свалке!\n' +
+                                'Уворачивайся от голов, выполняй трюки\n' +
+                                'и ставь новые рекорды!\n\n' +
+                                'Управление:\n' +
+                                '• A / левая педаль - Тормоз\n' +
+                                '• S / правая педаль - Газ\n' +
+                                '• SPACE / кнопка - Рывок\n\n' +
+                                'Цель: проехать как можно дальше!';
+                
+                if (window.Telegram && Telegram.WebApp) {
+                    Telegram.WebApp.showAlert(aboutText);
+                } else {
+                    alert(aboutText);
+                }
+            }
+            
+            updateBestScoreDisplay() {
+                document.getElementById('best-score').textContent = this.bestScore;
+            }
+        }
+
+        // ==================== ЗАПУСК ИГРЫ ====================
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            // Создаем экземпляр игры
+            window.game = new TrashKartGame();
+            
+            // Предотвращение стандартных жестов на мобильных
+            document.addEventListener('touchmove', (e) => {
+                if (e.target.classList.contains('control-btn')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Глобальные функции для обработки касаний
+            window.onTouchStart = function(e) {
+                if (!window.game) return;
+                
+                const btn = e.target.closest('.control-btn');
+                if (btn) {
+                    if (btn.id === 'btn-brake') {
+                        window.game.keysPressed.brake = true;
+                    } else if (btn.id === 'btn-gas') {
+                        window.game.keysPressed.gas = true;
+                    }
+                }
+            };
+            
+            window.onTouchEnd = function(e) {
+                if (!window.game) return;
+                
+                const btn = e.target.closest('.control-btn');
+                if (btn) {
+                    if (btn.id === 'btn-brake') {
+                        window.game.keysPressed.brake = false;
+                    } else if (btn.id === 'btn-gas') {
+                        window.game.keysPressed.gas = false;
+                    }
+                }
+            };
+            
+            console.log('Trash Kart Racer загружен!');
+            console.log('Управление: A - тормоз, S - газ, SPACE - рывок');
+        });
+    </script>
+</body>
+</html>
